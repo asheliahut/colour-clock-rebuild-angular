@@ -3,7 +3,7 @@ var app = angular.module("colorClock", []);
 app.directive("colorClock", function(){
 	return {
 		restrict: 'E',
-		template: "<div id=\"clock_wrap\"><div id=\"clock\"></div><div id=\"hex\"></div><div id=\"clock_bg\"></div></div>",
+		template: "<div ng-style=\"{'background-color': hex, 'color': invertHex}\" id=\"clock_wrap\"><div id=\"clock\"><span id='hours'>{{currentHours}}</span>:<span id='minutes'>{{currentMinutes}}</span>:<span id='seconds'>{{currentSeconds}}</span></div><div id=\"hex\">{{hex}}</div><div id=\"clock_bg\"></div></div>",
 		controller: ['$scope','$interval', function($scope, $interval){
 			$scope.maxnumhours = 23;
 			$scope.maxnummins = 59;
@@ -15,7 +15,8 @@ app.directive("colorClock", function(){
 			$scope.currentSeconds = $scope.currentTime.getSeconds();
 			$scope.currentMiliSeconds = $scope.currentTime.getMilliseconds();
 			$scope.rounded = $scope.currentSeconds + ($scope.currentMiliSeconds / $scope.maxmilisecs);
-
+            $scope.hex = "#000";
+            $scope.invertHex = "000";
 			$scope.hexifyWithZeroLead = function(tohex){
 				var rtn = tohex.toString(16);
 				return ( rtn.length == 1 ? "0" : "" ) + rtn;
@@ -45,21 +46,37 @@ app.directive("colorClock", function(){
 				bluehex = $scope.hexifyWithZeroLead(bluenum);
 
 				//Create the Hex Strings
-				var hex = "#" + redhex + greenhex + bluehex;		//Total HEX Value
-				var fullredhex = "#"+redhex+"0000";				//RED Only Hex
-				var fullgreenhex = "#00"+greenhex+"00";			//GREEN Only Hex
-				var fullbluehex = "#0000"+bluehex;				//BLUE Only Hex
-
+				$scope.hex = "#" + redhex + greenhex + bluehex;		//Total HEX Value
+                $scope.invertHex = "#" + invertHex(""+redhex+greenhex+bluehex);
 				//zerolead the time for display
 				$scope.currentHours = ( $scope.currentHours < 10 ? "0" : "" ) + $scope.currentHours;
 				$scope.currentMinutes = ( $scope.currentMinutes < 10 ? "0" : "" ) + $scope.currentMinutes;
 				$scope.currentSeconds = ( $scope.currentSeconds < 10 ? "0" : "" ) + $scope.currentSeconds;
-
-				//append the values
-				$("#clock").html("<span id='hours'>"+ $scope.currentHours + "</span>:<span id='minutes'>" + $scope.currentMinutes + "</span>:<span id='seconds'>" + $scope.currentSeconds + '</span>');
-				$("#hex").html(hex);
-				$('body').css('background-color',hex);
 			}
+            
+            function invertHex(hexnum){
+              hexnum = hexnum.toUpperCase();
+              var splitnum = hexnum.split("");
+              var resultnum = "";
+              var simplenum = "FEDCBA9876".split("");
+              var complexnum = new Array();
+              complexnum.A = "5";
+              complexnum.B = "4";
+              complexnum.C = "3";
+              complexnum.D = "2";
+              complexnum.E = "1";
+              complexnum.F = "0";
+
+              for(i=0; i<6; i++){
+                if(!isNaN(splitnum[i])) {
+                  resultnum += simplenum[splitnum[i]]; 
+                } else if(complexnum[splitnum[i]]){
+                  resultnum += complexnum[splitnum[i]]; 
+                }
+              }
+
+              return resultnum;
+            }
 
 			$interval(updateClock, 250);
 		}]
